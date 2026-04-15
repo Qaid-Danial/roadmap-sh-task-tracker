@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,63 +27,101 @@ type tasks struct {
 
 }
 
+func (t tasks) printTask() {
+	fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", t.id, t.description, t.status)
+	fmt.Printf("Last Modified: %v\n\n", t.updatedAt.Format(time.ANSIC))
+}
+
+var (
+	taskList []tasks
+)
+
 func main() {
 
-	// var command string 
-	// var description string
+	// italic := "\033[3m"
+	// reset := "\033[0m"
+
+	var command string 
+
 	// var id int
 
-	var command1, command2 string
-
-	fmt.Print("> ")
-
-	command1 = strings.ToLower(command1)
-	command2 = strings.ToLower(command2)
-
-	fmt.Scanf("%s", &command1)
-
-	if command1 == "pipi" {
-		fmt.Scanf("%q", &command2)
-	} else if command1 == "popo" {
-		fmt.Scanf("%s", &command2)
-	}
-
-
-	fmt.Println(command1)
-	fmt.Println(command2)
 	
+	Reader := bufio.NewReader(os.Stdin)
 
+	for {		
 
-	// for {		
+		fmt.Print("Task-CLI ")
+		// fmt.Printf("\nl2\n")
 
-	// 	fmt.Print("Task-CLI ")
-	// 	n, err := fmt.Scanln(&command)
+		// n, err := fmt.Scanf("%s", &command)
 		
-	// 	command = strings.ToLower(command)
+		// command = strings.ToLower(command)
 
-	// 	if n != 0 && err == nil {
+		text, _ := Reader.ReadString('\n')
+		text = strings.TrimSpace(text)
+
+		text_list := strings.SplitN(text, " ", 2)
+
+		command = strings.ToLower(text_list[0])
 			
-	// 		switch command {
-	// 		case "exit", "e":
-	// 			fmt.Printf("\nExiting\n\n")
-	// 			return
+		switch command {
+		case "exit", "e":
+			fmt.Printf("\nExiting\n\n")
+			return
 
-	// 		case "add", "a":
-	// 			fmt.Printf("\nAdding Task\n\n")
+		case "add", "a":
 
-	// 		case "update", "u":
-	// 			fmt.Printf("\nUpdating Task\n\n")
+			description := text_list[1]
+			description = strings.Trim(description, `"`)
+
+			fmt.Printf("'%s' is added to the list of tasks\n\n", description)
+
+			taskList = append(taskList, tasks{
+				id: (len(taskList) + 1),
+				description: description,
+				status: toDo,
+				createdAt: time.Now(),
+				updatedAt: time.Now(),
+			})
+
+		case "update", "u":
+			
+			parameter := strings.ToLower(text_list[1])
+			parameter_list := strings.SplitN(parameter, " ", 2)
+
+			task_id, _ := strconv.Atoi(parameter_list[0])
+			
+			for i, t := range taskList {
+				if t.id == task_id {
+					taskList[i].description = strings.Trim(parameter_list[1], `"`)
+					taskList[i].updatedAt = time.Now()
+				}
+			}
+			
+
+		case "delete", "d":
+			fmt.Printf("\nDeleting Task\n\n")
+
+		case "list", "l":
+
+			status := strings.ToLower(text_list[1])
+
+			switch status{
+			case "todo":
 				
+				for _, t := range taskList {
+					if t.status == "to-do" {
+						t.printTask()
+					}
+				}	
+			}
 
-	// 		case "delete", "d":
-	// 			fmt.Printf("\nDeleting Task\n\n")
 
+		default:
+			fmt.Printf("\nInvalid\n\n")
 
-	// 		default:
-	// 			fmt.Printf("\nInvalid\n\n")
-
-	// 		}
-	// 	} 
-	// }
+		
+		} 
+	}
 
 }
