@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -19,17 +19,69 @@ const (
 
 type tasks struct {
 
-	id int
-	description string 
-	status Status
-	createdAt time.Time
-	updatedAt time.Time
+	ID int `json:"ID"`
+	Description string `json:"Description"`
+	Status Status `json:"Status"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	UpdatedAt time.Time `json:"UpdatedAT"`
 
 }
 
-func (t tasks) printTask() {
-	fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", t.id, t.description, t.status)
-	fmt.Printf("Last Modified: %v\n\n", t.updatedAt.Format(time.ANSIC))
+func addTask(description string) {
+
+	readTask()
+
+	new_task := tasks{
+		ID: (len(taskList) + 1),
+		Description: description,
+		Status: toDo,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	taskList = append(taskList, new_task)
+
+	marshalled, err_marshal := json.MarshalIndent(taskList, "", " ")
+	if err_marshal != nil {
+		fmt.Printf("Error when marshaling data: %v\n", err_marshal)
+	}
+
+	err_write := os.WriteFile("task.json", marshalled, 0644)
+	if err_write != nil {
+		fmt.Printf("Error when writing data: %v\n", err_write)
+	}
+
+}
+
+func readTask() {
+
+	reader, err_read := os.ReadFile("task.json")
+	if err_read != nil {
+		fmt.Printf("Error when reading data: %v\n", err_read)
+	}
+
+	if len(reader) != 0 {
+		err_unmarshal := json.Unmarshal(reader, &taskList)
+		if err_unmarshal != nil {
+			fmt.Printf("Error when unmarshaling data: %v\n", err_unmarshal)
+		}
+	}
+
+}
+
+func printTasks(statusInt int) {
+
+	readTask()
+
+	for i := range taskList {
+		if statusInt == 0 {
+			if taskList[i].Status == "to-do" {
+				fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", taskList[i].ID, taskList[i].Description, taskList[i].Status)
+				fmt.Printf("Last Modified: %v\n\n",  taskList[i].UpdatedAt.Format(time.ANSIC))
+			}
+		}
+
+	}
 }
 
 var (
@@ -74,29 +126,31 @@ func main() {
 			description := text_list[1]
 			description = strings.Trim(description, `"`)
 
+			addTask(description)
+
 			fmt.Printf("'%s' is added to the list of tasks\n\n", description)
 
-			taskList = append(taskList, tasks{
-				id: (len(taskList) + 1),
-				description: description,
-				status: toDo,
-				createdAt: time.Now(),
-				updatedAt: time.Now(),
-			})
+			// taskList = append(taskList, tasks{
+			// 	id: (len(taskList) + 1),
+			// 	description: description,
+			// 	status: toDo,
+			// 	createdAt: time.Now(),
+			// 	updatedAt: time.Now(),
+			// })
 
 		case "update", "u":
 			
-			parameter := strings.ToLower(text_list[1])
-			parameter_list := strings.SplitN(parameter, " ", 2)
+			// parameter := strings.ToLower(text_list[1])
+			// parameter_list := strings.SplitN(parameter, " ", 2)
 
-			task_id, _ := strconv.Atoi(parameter_list[0])
+			// task_id, _ := strconv.Atoi(parameter_list[0])
 			
-			for i, t := range taskList {
-				if t.id == task_id {
-					taskList[i].description = strings.Trim(parameter_list[1], `"`)
-					taskList[i].updatedAt = time.Now()
-				}
-			}
+			// for i, t := range taskList {
+			// 	if t.id == task_id {
+			// 		taskList[i].description = strings.Trim(parameter_list[1], `"`)
+			// 		taskList[i].updatedAt = time.Now()
+			// 	}
+			// }
 			
 
 		case "delete", "d":
@@ -108,12 +162,7 @@ func main() {
 
 			switch status{
 			case "todo":
-				
-				for _, t := range taskList {
-					if t.status == "to-do" {
-						t.printTask()
-					}
-				}	
+				printTasks(0)
 			}
 
 
