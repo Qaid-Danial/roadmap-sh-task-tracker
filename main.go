@@ -128,6 +128,27 @@ func remTask(id int) {
 
 }
 
+func stateUpdate(id int, state Status) {
+
+	readTask()
+
+	for i := range len(taskList) {
+		if taskList[i].ID == id {
+
+			taskList[i].Status = state
+
+			marshalHelper()
+
+			fmt.Printf("\nTask %d has successfully been updated\n\n", id)	
+			
+			return
+		}
+	}
+
+	fmt.Printf("\nTask with that ID doesn't exist\n\n")
+
+}
+
 func printTasks(statusInt int) {
 
 	readTask()
@@ -218,7 +239,6 @@ func main() {
 
 
 		case "delete", "d":
-			// fmt.Printf("\nDeleting Task\n\n")
 
 			task_id, _ := strconv.Atoi(text_list[1])
 			remTask(task_id)
@@ -238,14 +258,35 @@ func main() {
 				case "todo", "t":
 					printTasks(0)
 
-				case "in progress", "i":
+				case "in-progress", "in progress", "i":
 					printTasks(1)
 
 				case "done", "d":
 					printTasks(2)
 
+				}
 			}
-}
+		
+		case "mark", "m":
+
+			parameter := strings.ToLower(text_list[1])
+			parameter_list := strings.SplitN(parameter, " ", 2)
+
+			if len(parameter_list) < 2 {
+				fmt.Printf("\nPlease enter the correct command\n\n")
+
+			} else {
+				task_id, _ := strconv.Atoi(parameter_list[0])
+				new_state := parameter_list[1]
+
+				switch new_state {
+				case "in-progress", "i", "in progress":
+					stateUpdate(task_id, inProgress)
+
+				case "done", "d":
+					stateUpdate(task_id, done)
+				}
+			}
 
 		default:
 			fmt.Printf("\nInvalid\n\n")
