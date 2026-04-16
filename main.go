@@ -102,7 +102,7 @@ func updTask(id int, description string) {
 		}
 	}
 
-	fmt.Printf("\nTask with the ID %d doesn't exist\n\n", id)
+	fmt.Printf("\nTask with that ID doesn't exist\n\n")
 
 
 }
@@ -113,7 +113,7 @@ func remTask(id int) {
 
 	for i := range len(taskList) {
 		if taskList[i].ID == id {
-			
+
 			taskList = append(taskList[:i], taskList[i+1:]...)
 
 			marshalHelper()
@@ -124,7 +124,7 @@ func remTask(id int) {
 		}
 	}
 
-	fmt.Printf("\nTask with the ID %d doesn't exist\n\n", id)
+	fmt.Printf("\nTask with that ID doesn't exist\n\n")
 
 }
 
@@ -133,11 +133,29 @@ func printTasks(statusInt int) {
 	readTask()
 
 	for i := range taskList {
-		if statusInt == 0 {
+
+		switch statusInt {
+		case 0: 
 			if taskList[i].Status == "to-do" {
 				fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", taskList[i].ID, taskList[i].Description, taskList[i].Status)
 				fmt.Printf("Last Modified: %v\n\n",  taskList[i].UpdatedAt.Format(time.ANSIC))
-			}
+			} 
+
+		case 1: 
+			if taskList[i].Status == "in-progress" {
+				fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", taskList[i].ID, taskList[i].Description, taskList[i].Status)
+				fmt.Printf("Last Modified: %v\n\n",  taskList[i].UpdatedAt.Format(time.ANSIC))
+			} 
+
+		case 2: 
+			if taskList[i].Status == "done" {
+				fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", taskList[i].ID, taskList[i].Description, taskList[i].Status)
+				fmt.Printf("Last Modified: %v\n\n",  taskList[i].UpdatedAt.Format(time.ANSIC))
+			} 
+		
+		case 3:
+			fmt.Printf("\nTask ID: %d | Task Description: %s | Status: %s\n", taskList[i].ID, taskList[i].Description, taskList[i].Status)
+			fmt.Printf("Last Modified: %v\n\n",  taskList[i].UpdatedAt.Format(time.ANSIC))
 		}
 
 	}
@@ -185,11 +203,19 @@ func main() {
 			parameter := strings.ToLower(text_list[1])
 			parameter_list := strings.SplitN(parameter, " ", 2)
 
-			task_id, _ := strconv.Atoi(parameter_list[0])
-			description := parameter_list[1]
+			// fmt.Println(len(parameter_list))
 
-			updTask(task_id, description)
+			if len(parameter_list) < 2 {
+				fmt.Printf("\nPlease enter the correct command\n\n")
+
+			} else {	
+				task_id, _ := strconv.Atoi(parameter_list[0])
+				description := parameter_list[1]
+
+				updTask(task_id, description)
 			
+			}
+
 
 		case "delete", "d":
 			// fmt.Printf("\nDeleting Task\n\n")
@@ -200,13 +226,26 @@ func main() {
 
 		case "list", "l":
 
-			status := strings.ToLower(text_list[1])
+			if len(text_list) < 2 {
 
-			switch status{
-			case "todo":
-				printTasks(0)
+				printTasks(3)
+
+			} else {
+				
+				status := strings.ToLower(text_list[1])
+
+				switch status{
+				case "todo", "t":
+					printTasks(0)
+
+				case "in progress", "i":
+					printTasks(1)
+
+				case "done", "d":
+					printTasks(2)
+
 			}
-
+}
 
 		default:
 			fmt.Printf("\nInvalid\n\n")
