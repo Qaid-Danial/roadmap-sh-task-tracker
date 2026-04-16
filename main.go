@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,32 +28,6 @@ type tasks struct {
 
 }
 
-func addTask(description string) {
-
-	readTask()
-
-	new_task := tasks{
-		ID: (len(taskList) + 1),
-		Description: description,
-		Status: toDo,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	taskList = append(taskList, new_task)
-
-	marshalled, err_marshal := json.MarshalIndent(taskList, "", " ")
-	if err_marshal != nil {
-		fmt.Printf("Error when marshaling data: %v\n", err_marshal)
-	}
-
-	err_write := os.WriteFile("task.json", marshalled, 0644)
-	if err_write != nil {
-		fmt.Printf("Error when writing data: %v\n", err_write)
-	}
-
-}
-
 func readTask() {
 
 	reader, err_read := os.ReadFile("task.json")
@@ -66,6 +41,90 @@ func readTask() {
 			fmt.Printf("Error when unmarshaling data: %v\n", err_unmarshal)
 		}
 	}
+
+}
+
+func marshalHelper() {
+
+	marshalled, err_marshal := json.MarshalIndent(taskList, "", " ")
+	if err_marshal != nil {
+		fmt.Printf("Error when marshaling data: %v\n", err_marshal)
+	}
+
+	err_write := os.WriteFile("task.json", marshalled, 0644)
+	if err_write != nil {
+		fmt.Printf("Error when writing data: %v\n", err_write)
+	}
+}
+
+func addTask(description string) {
+
+	readTask()
+
+	var index int
+
+	if len(taskList) == 0 {
+		index = 1
+	} else {
+		index = taskList[len(taskList)-1].ID + 1
+	}
+
+	new_task := tasks{
+		ID: index,
+		Description: description,
+		Status: toDo,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	taskList = append(taskList, new_task)
+
+	marshalHelper()
+
+	fmt.Printf("'%s' is added to the list of tasks\n\n", description)
+
+}
+
+func updTask(id int, description string) {
+
+	readTask()
+
+	for i := range len(taskList) {
+		if taskList[i].ID == id {
+
+			taskList[i].Description = description
+
+			marshalHelper()
+
+			fmt.Printf("\nTask %d has successfully been updated\n\n", id)	
+			
+			return
+		}
+	}
+
+	fmt.Printf("\nTask with the ID %d doesn't exist\n\n", id)
+
+
+}
+
+func remTask(id int) {
+
+	readTask()
+
+	for i := range len(taskList) {
+		if taskList[i].ID == id {
+			
+			taskList = append(taskList[:i], taskList[i+1:]...)
+
+			marshalHelper()
+
+			fmt.Printf("\nTask %d has successfully been deleted\n\n", id)	
+			
+			return
+		}
+	}
+
+	fmt.Printf("\nTask with the ID %d doesn't exist\n\n", id)
 
 }
 
@@ -95,19 +154,11 @@ func main() {
 
 	var command string 
 
-	// var id int
-
-	
 	Reader := bufio.NewReader(os.Stdin)
 
 	for {		
 
 		fmt.Print("Task-CLI ")
-		// fmt.Printf("\nl2\n")
-
-		// n, err := fmt.Scanf("%s", &command)
-		
-		// command = strings.ToLower(command)
 
 		text, _ := Reader.ReadString('\n')
 		text = strings.TrimSpace(text)
@@ -128,33 +179,24 @@ func main() {
 
 			addTask(description)
 
-			fmt.Printf("'%s' is added to the list of tasks\n\n", description)
-
-			// taskList = append(taskList, tasks{
-			// 	id: (len(taskList) + 1),
-			// 	description: description,
-			// 	status: toDo,
-			// 	createdAt: time.Now(),
-			// 	updatedAt: time.Now(),
-			// })
 
 		case "update", "u":
 			
-			// parameter := strings.ToLower(text_list[1])
-			// parameter_list := strings.SplitN(parameter, " ", 2)
+			parameter := strings.ToLower(text_list[1])
+			parameter_list := strings.SplitN(parameter, " ", 2)
 
-			// task_id, _ := strconv.Atoi(parameter_list[0])
-			
-			// for i, t := range taskList {
-			// 	if t.id == task_id {
-			// 		taskList[i].description = strings.Trim(parameter_list[1], `"`)
-			// 		taskList[i].updatedAt = time.Now()
-			// 	}
-			// }
+			task_id, _ := strconv.Atoi(parameter_list[0])
+			description := parameter_list[1]
+
+			updTask(task_id, description)
 			
 
 		case "delete", "d":
-			fmt.Printf("\nDeleting Task\n\n")
+			// fmt.Printf("\nDeleting Task\n\n")
+
+			task_id, _ := strconv.Atoi(text_list[1])
+			remTask(task_id)
+
 
 		case "list", "l":
 
